@@ -9,7 +9,9 @@ from sklearn.metrics import accuracy_score, classification_report
 def extract_hog_features(img):
     if len(img.shape) == 3:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img_resized = cv2.resize(img, (64, 64))
+    blur = cv2.GaussianBlur(img, (5, 5), 0)
+    _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    img_resized = cv2.resize(thresh, (64, 64))
     return hog(img_resized, orientations=9, pixels_per_cell=(8, 8), cells_per_block=(2, 2))
 
 def load_data(folder_path):

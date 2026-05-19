@@ -7,15 +7,19 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, f1_score, precision_score, recall_score
 
 def extract_hog_features(img):
-    """將圖片轉換為 HOG 特徵"""
-    # 1. 轉灰階
+    """二值化專家版 HOG 特徵：徹底分離手部輪廓"""
     if len(img.shape) == 3:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     
-    # 2. 縮放至固定大小 (64x64)
-    img_resized = cv2.resize(img, (64, 64))
+    # 1. 影像預處理：高斯模糊降噪
+    blur = cv2.GaussianBlur(img, (5, 5), 0)
     
-    # 3. 計算 HOG 特徵
+    # 2. Otsu 自動門檻二值化：將手變成純白，背景變成純黑
+    # 這能極大提升「布」這種具有複雜邊緣的手勢辨識率
+    _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    
+    # 3. 縮放並計算 HOG
+    img_resized = cv2.resize(thresh, (64, 64))
     features = hog(img_resized, 
                    orientations=9, 
                    pixels_per_cell=(8, 8),

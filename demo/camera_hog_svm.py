@@ -5,7 +5,9 @@ from skimage.feature import hog
 
 def extract_hog_features(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img_resized = cv2.resize(gray, (64, 64))
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)
+    _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    img_resized = cv2.resize(thresh, (64, 64))
     features = hog(img_resized, orientations=9, pixels_per_cell=(8, 8),
                    cells_per_block=(2, 2), visualize=False)
     return features
