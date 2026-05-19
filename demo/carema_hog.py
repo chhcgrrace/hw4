@@ -49,21 +49,35 @@ def main():
         cv2.putText(frame, "Put hand in box", (x1, y1 - 10), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-        # 1. Extract HOG from ROI only
-        feat = extract_hog_features(roi).reshape(1, -1)
-
-        # 2. Prediction
-        probs = model.predict_proba(feat)[0]
-        max_prob = np.max(probs)
-        prediction_idx = np.argmax(probs)
+        # 1. 影像預處理與二值化
+        feat_raw = extract_hog_features(roi)
         
-        # 3. Threshold check for "Error"
-        if max_prob < 0.45:
-            result_text = "Error"
-            color = (0, 0, 255) # Red
+        # --- 新增：面積檢查 (防止空畫面誤判) ---
+        # 取得二值化後的圖形
+        gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+        blur = cv2.GaussianBlur(gray, (3, 3), 0)
+        _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        
+        white_pixels = np.sum(thresh == 255)
+        white_per = white_pixels / (roi_size * roi_size)
+        
+        # 如果白色部分太少(沒手)或太多(過曝)，直接判定為 Error
+        if white_per < 0.1 or white_per > 0.8:
+            result_text = "No Hand / Error"
+            color = (0, 0, 255)
         else:
-            result_text = f"{labels[prediction_idx]} ({max_prob*100:.1f}%)"
-            color = (0, 255, 0) # Green
+            # 2. 進行正式預測
+            feat = feat_raw.reshape(1, -1)
+            probs = model.predict_proba(feat)[0]
+            max_prob = np.max(probs)
+            prediction_idx = np.argmax(probs)
+            
+            if max_prob < 0.45:
+                result_text = "Error"
+                color = (0, 0, 255)
+            else:
+                result_text = f"{labels[prediction_idx]} ({max_prob*100:.1f}%)"
+                color = (0, 255, 0)
 
         # 4. Draw result text
         cv2.putText(frame, f"Result: {result_text}", (20, 40), 
