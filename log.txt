@@ -98,3 +98,6 @@ ANTIGRAVITY: (說明 camera_hog_svm.py 必須配合模型微調 HOG 特徵提取
 
 USER: 話說githiub上的照片跟現在資料夾內最外層的照片都可以刪掉喔謝謝
 ANTIGRAVITY: (清理專案最外層的 10 張圖片檔案，並同步提交至 Git 以移除 GitHub 上的這些照片檔案，使專案結構更乾淨。)
+
+USER: test.jpg 這個是測試準確率的圖請README上
+ANTIGRAVITY: (將 test.jpg 準確率結果圖放入專案根目錄，更新 README.md 將其嵌入模型評估小節中，並同步更新特徵提取之灰階描述，隨後同步推送至 GitHub。)
