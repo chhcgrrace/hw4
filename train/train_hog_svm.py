@@ -1,15 +1,4 @@
 import os
-import tempfile
-
-# Redirect temporary folder to bypass Unicode path errors on Windows multiprocessing
-temp_dir = r"C:\Users\Public\Temp"
-try:
-    os.makedirs(temp_dir, exist_ok=True)
-    tempfile.tempdir = temp_dir
-    os.environ['JOBLIB_TEMP_FOLDER'] = temp_dir
-except Exception:
-    pass
-
 import cv2
 import numpy as np
 import joblib
@@ -17,7 +6,6 @@ from skimage.feature import hog
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import accuracy_score, classification_report
 
 def imread_safe(p):
@@ -72,37 +60,21 @@ def main():
     X_train, y_train = load_data(train_dir)
     X_test, y_test = load_data(test_dir)
 
-    print("\n=== Training SVM Pipeline with GridSearchCV (Parallel Mode) ===")
+    print("\n=== Training SVM Pipeline ===")
     
-    # Define pipeline with StandardScaler and SVC with balanced class weight
-    pipeline = Pipeline([
+    # Directly train with the optimal parameters found in experiments
+    model = Pipeline([
         ('scaler', StandardScaler()),
-        ('svm', SVC(probability=True, class_weight='balanced', random_state=42))
+        ('svm', SVC(kernel='linear', C=1.0, probability=True, class_weight='balanced', random_state=42))
     ])
 
-    # Parameter grid for grid search (using all CPU cores n_jobs=-1)
-    param_grid = [
-        {
-            'svm__kernel': ['linear'],
-            'svm__C': [0.1, 1.0, 10.0]
-        },
-        {
-            'svm__kernel': ['rbf'],
-            'svm__C': [0.1, 1.0, 5.0, 10.0],
-            'svm__gamma': ['scale', 'auto', 0.001, 0.01, 0.1]
-        }
-    ]
-
-    print("Running Grid Search CV in parallel...")
-    grid_search = GridSearchCV(pipeline, param_grid, cv=3, n_jobs=-1, verbose=1)
-    grid_search.fit(X_train, y_train)
-
-    print(f"\nBest Model Parameters: {grid_search.best_params_}")
-    model = grid_search.best_estimator_
+    print("Fitting model...")
+    model.fit(X_train, y_train)
+    print("Training finished.")
 
     # Evaluation
     y_pred = model.predict(X_test)
-    print(f"Test Accuracy: {accuracy_score(y_test, y_pred)*100:.2f}%")
+    print(f"\nTest Accuracy: {accuracy_score(y_test, y_pred)*100:.2f}%")
     print(classification_report(y_test, y_pred, target_names=['Rock', 'Paper', 'Scissors']))
 
     # Save model pipeline
