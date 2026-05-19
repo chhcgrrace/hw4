@@ -10,11 +10,6 @@ def extract_hog_features(img):
     lower = np.array([0, 133, 77], dtype=np.uint8)
     upper = np.array([255, 173, 127], dtype=np.uint8)
     mask = cv2.inRange(ycrcb, lower, upper)
-    
-    # --- 剪刀優化：使用侵蝕讓手指分開 ---
-    kernel = np.ones((3, 3), np.uint8)
-    mask = cv2.erode(mask, kernel, iterations=1)
-    
     mask = cv2.GaussianBlur(mask, (5, 5), 0)
     img_resized = cv2.resize(mask, (64, 64))
     features = hog(img_resized, orientations=9, pixels_per_cell=(8, 8),
