@@ -31,31 +31,54 @@ def extract_hog_features(img):
                    visualize=False)
     return features
 
-def load_data(folder_path):
-    """讀取圖片並提取 HOG 特徵"""
+def augment_image(img):
+    """數據增強：產生旋轉與縮放後的變體"""
+    augmented = []
+    # 1. 原始圖
+    augmented.append(img)
+    
+    h, w = img.shape[:2]
+    center = (w // 2, h // 2)
+    
+    # 2. 旋轉變體 (+15, -15 度)
+    for angle in [15, -15]:
+        M = cv2.getRotationMatrix2D(center, angle, 1.0)
+        rotated = cv2.warpAffine(img, M, (w, h))
+        augmented.append(rotated)
+        
+    # 3. 縮放變體 (0.9x, 1.1x)
+    for scale in [0.9, 1.1]:
+        M = cv2.getRotationMatrix2D(center, 0, scale)
+        scaled = cv2.warpAffine(img, M, (w, h))
+        augmented.append(scaled)
+        
+    return augmented
+
+def load_data(folder_path, augment=False):
+    """讀取圖片並提取 HOG 特徵（可選數據增強）"""
     features_list = []
     labels_list = []
     label_map = {'rock': 0, 'paper': 1, 'scissors': 2}
     
     for category, label_idx in label_map.items():
         category_path = os.path.join(folder_path, category)
-        
         if not os.path.exists(category_path):
             subdirs = [d for d in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, d))]
-            if subdirs:
-                category_path = os.path.join(folder_path, subdirs[0], category)
-        
-        if not os.path.exists(category_path):
-            continue
+            if subdirs: category_path = os.path.join(folder_path, subdirs[0], category)
+        if not os.path.exists(category_path): continue
             
-        print(f"Processing HOG features for {category}...")
+        print(f"Loading and Augmenting {category}...")
         for filename in os.listdir(category_path):
             if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
                 img = cv2.imread(os.path.join(category_path, filename))
                 if img is not None:
-                    feat = extract_hog_features(img)
-                    features_list.append(feat)
-                    labels_list.append(label_idx)
+                    # 如果是訓練集，執行增強
+                    imgs_to_process = augment_image(img) if augment else [img]
+                    for target_img in imgs_to_process:
+                        feat = extract_hog_features(target_img)
+                        if feat is not None:
+                            features_list.append(feat)
+                            labels_list.append(label_idx)
                     
     return np.array(features_list), np.array(labels_list)
 
@@ -65,16 +88,16 @@ def main():
     test_dir = os.path.join(base_dir, 'dataset', 'test')
     demo_dir = os.path.join(base_dir, 'demo')
 
-    print("=== [1] Extracting HOG features ===")
-    X_train, y_train = load_data(train_dir)
-    X_test, y_test = load_data(test_dir)
+    print("=== [1] Extracting HOG features (with Augmentation) ===")
+    X_train, y_train = load_data(train_dir, augment=True)
+    X_test, y_test = load_data(test_dir, augment=False)
 
     if len(X_train) == 0:
         print("Error: No training data found!")
         return
 
-    print("\n=== [2] Training Random Forest model ===")
-    rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+    print(f"\n=== [2] Training Pro Random Forest (n_estimators=300) ===")
+    rf_model = RandomForestClassifier(n_estimators=300, max_depth=25, random_state=42)
     rf_model.fit(X_train, y_train)
 
     print("\n=== [3] Evaluation Report (Part 3) ===")
