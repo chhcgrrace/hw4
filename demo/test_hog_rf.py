@@ -20,16 +20,16 @@ def main():
     test_dir = '../dataset/test'
 
     if not os.path.exists(model_path):
-        print(f"❌ 找不到模型檔案 {model_path}，請先執行 train_hog_random_forest.py")
+        print(f"找不到模型檔案 {model_path}，請先執行 train_hog_random_forest.py")
         return
 
-    print("⏳ 載入 HOG+RF 模型...")
+    print("載入 HOG+RF 模型...")
     model = joblib.load(model_path)
 
     label_map = {'rock': 0, 'paper': 1, 'scissors': 2}
     X_test, y_test = [], []
 
-    print("📂 正在處理測試集 HOG 特徵...")
+    print("正在處理測試集 HOG 特徵...")
     for category, label_idx in label_map.items():
         category_path = os.path.join(test_dir, category)
         if not os.path.exists(category_path):
@@ -43,12 +43,12 @@ def main():
                     y_test.append(label_idx)
 
     if not X_test:
-        print("❌ 找不到測試圖片！")
+        print("找不到測試圖片！")
         return
 
     y_pred = model.predict(X_test)
-    print(f"\n🎯 測試準確率: {accuracy_score(y_test, y_pred) * 100:.2f}%")
-    print("\n📊 分類報告：")
+    print(f"\n測試準確率: {accuracy_score(y_test, y_pred) * 100:.2f}%")
+    print("\n分類報告：")
     print(classification_report(y_test, y_pred, target_names=['Rock', 'Paper', 'Scissors']))
 
 if __name__ == "__main__":

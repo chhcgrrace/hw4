@@ -1,38 +1,72 @@
-## 刷機
+# 剪刀石頭布手勢辨識系統 (HOG + SVM)
 
-https://www.raspberrypi.com/software/
-
-1.	下載 Raspberry Pi Imager
-    ![alt text](image.png)
-2.	選擇 Raspberry Pi 4 64-bit
-    ![alt text](image-1.png)
-3.	插上讀卡機
-    ![alt text](image-2.png)
-4.	輸入主機名，ssh 會用到
-    ![alt text](image-3.png)
-5.	首都 Taipei ;時區Asia/Taipei
-    ![alt text](image-4.png)
-6.	輸入用戶名及密碼，ssh 會用到
-    ![alt text](image-5.png)
-7.	開啟 ssh
-    ![alt text](image-6.png)
-8.	完成寫入
-    ![alt text](image-7.png)
+本專案實作了一個基於影像 HOG (Histogram of Oriented Gradients) 特徵提取與 SVM (Support Vector Machine) 分類器的手勢辨識系統，並支援樹莓派 (Raspberry Pi) 或一般電腦的即時相機辨識。
 
 ---
 
-## 運行
+## 📂 資料夾結構與核心程式說明
 
-https://github.com/BiBaIsAFish/RSP_demo
+```text
+hw4/
+├── dataset/                    # 手勢影像資料集
+│   ├── train/                  # 訓練集影像 (Rock, Paper, Scissors)
+│   └── test/                   # 測試集影像 (Rock, Paper, Scissors)
+├── train/                      # 訓練相關程式
+│   └── train_hog_svm.py        # 模型訓練腳本
+│                               # 流程：膚色遮罩(YCrCb) -> HOG 特徵提取 -> 線性 SVM 訓練 -> 存檔至 demo 目錄
+└── demo/                       # 測試與相機展示程式
+    ├── rps_hog_svm_model.pkl   # 已訓練好的 HOG+SVM 權重模型
+    ├── test_hog_svm.py         # 測試集評估程式，用以輸出準確率與分類報告
+    └── camera_hog_svm.py       # 即時相機辨識程式
+                                # 核心：ROI擷取 -> 膚色偵測 -> HOG預測 -> 指縫特徵點雙重驗證 -> 輸出結果
+```
 
-1.	下載 github
-2.	Demo carema
-    ![](17903.jpg)
-    ![](17904.jpg)
+### 核心檔案功能介紹
+
+#### 1. `train/train_hog_svm.py` (模型訓練)
+* **功能**：讀取訓練集與測試集手勢影像，對影像進行**膚色二值化遮罩處理 (YCrCb 色彩空間)**、**高斯模糊**與**影像縮放**，最後提取 **HOG 特徵**。
+* **模型**：使用線性支持向量機 (`SVC(kernel='linear')`) 進行分類訓練，並將訓練好的模型存檔為 `demo/rps_hog_svm_model.pkl`。
+
+#### 2. `demo/rps_hog_svm_model.pkl` (訓練好的模型檔)
+* **功能**：由 `train_hog_svm.py` 訓練產生，儲存了 SVM 分類器與其權重參數。測試與相機即時辨識程式皆會載入此檔案進行預測。
+
+#### 3. `demo/test_hog_svm.py` (模型測試與評估)
+* **功能**：載入訓練好的 `rps_hog_svm_model.pkl`，讀取 `dataset/test` 中的影像，提取其 HOG 特徵，並進行預測。
+* **輸出**：輸出模型對測試集的**整體準確率 (Accuracy)** 與**分類詳細報告 (Precision, Recall, F1-Score)**。
+
+#### 4. `demo/camera_hog_svm.py` (即時相機辨識)
+* **功能**：啟動鏡頭擷取影像，設定一個 ROI (感興趣區域) 方框供使用者放置手掌。
+* **預處理**：將 ROI 區域轉換至 YCrCb 色彩空間進行膚色過濾，產生膚色 Mask 並排除無手、過曝或非膚色影像。
+* **雙重驗證機制**：使用 OpenCV 的 `findContours` 與 `convexityDefects` 計算指縫數量，並將其與 SVM 模型預測的標籤進行比對（例如：預測為 Rock 且指縫為 0、Scissors 且指縫為 1、Paper 且指縫 $\ge 3$ 才視為有效），若不符合或機率過低則判定為 `Error`。
 
 ---
 
-## 評分標準
+## 🛠️ 安裝與執行說明
+
+### 1. 安裝環境套件
+在終端機 (Terminal) 中執行以下指令安裝所需庫：
+```bash
+pip install scikit-learn opencv-python numpy joblib scikit-image
+```
+
+### 2. 模型測試評估
+切換至 `demo` 資料夾並執行測試程式：
+```bash
+cd demo
+python test_hog_svm.py
+```
+
+### 3. 執行相機即時辨識
+切換至 `demo` 資料夾並執行相機程式 (需配備 webcam)：
+```bash
+cd demo
+python camera_hog_svm.py
+```
+* 按下 `q` 鍵可退出相機畫面。
+
+---
+
+## 📋 評分標準
 
 - 成功在 Raspberry Pi 4 上執行 test.py & carema.py 50%
 - Demo 展示影片(carema) 15%

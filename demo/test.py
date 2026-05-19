@@ -11,24 +11,24 @@ def main():
     test_dir = '../dataset/test' 
 
     if not os.path.exists(model_path):
-        print(f"❌ 錯誤：找不到模型檔案 '{model_path}'，請確認是否已放入 demo 資料夾。")
+        print(f"錯誤：找不到模型檔案 '{model_path}'，請確認是否已放入 demo 資料夾。")
         return
     
     if not os.path.exists(test_dir):
-        print(f"❌ 錯誤：找不到測試資料集 '{test_dir}'。")
+        print(f"錯誤：找不到測試資料集 '{test_dir}'。")
         print("請確認 dataset/test 資料夾是否存在於上一層目錄。")
         return
 
     # 2. 載入模型
-    print("⏳ 載入模型中...")
+    print("載入模型中...")
     clf = joblib.load(model_path)
-    print("✅ 模型載入成功！\n")
+    print("模型載入成功！\n")
 
     label_map = {'rock': 0, 'paper': 1, 'scissors': 2}
     X_test, y_test = [], []
 
     # 3. 讀取並處理測試圖片
-    print("📂 正在讀取測試集圖片並進行預測...")
+    print("正在讀取測試集圖片並進行預測...")
     for category, label_idx in label_map.items():
         category_path = os.path.join(test_dir, category)
         
@@ -39,7 +39,7 @@ def main():
                 category_path = os.path.join(test_dir, subdirs[0], category)
 
         if not os.path.exists(category_path):
-            print(f"⚠️ 找不到 {category} 的圖片資料夾，略過...")
+            print(f"找不到 {category} 的圖片資料夾，略過...")
             continue
             
         for filename in os.listdir(category_path):
@@ -55,7 +55,7 @@ def main():
                     y_test.append(label_idx)
 
     if not X_test:
-        print("❌ 錯誤：沒有讀取到任何圖片，請檢查資料夾結構。")
+        print("錯誤：沒有讀取到任何圖片，請檢查資料夾結構。")
         return
 
     # 正規化
@@ -66,10 +66,10 @@ def main():
     y_pred = clf.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
     
-    print(f"\n📊 測試結果統整:")
+    print(f"\n測試結果統整:")
     print(f"總共測試了 {len(y_test)} 張圖片")
-    print(f"🎯 模型準確率: {accuracy * 100:.2f}%\n")
-    print("📝 分類詳細報告:")
+    print(f"模型準確率: {accuracy * 100:.2f}%\n")
+    print("分類詳細報告:")
     print(classification_report(y_test, y_pred, target_names=['Rock', 'Paper', 'Scissors']))
 
 if __name__ == "__main__":
