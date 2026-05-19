@@ -7,22 +7,23 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, f1_score, precision_score, recall_score
 
 def extract_hog_features(img):
-    """剪刀優化版 HOG 特徵：加入侵蝕分離手指"""
-    if len(img.shape) == 3:
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    """膚色偵測專家版 HOG 特徵：利用 YCrCb 過濾背景雜訊"""
+    if img is None: return None
     
-    # 1. 影像預處理：輕微模糊保留縫隙
-    blur = cv2.GaussianBlur(img, (3, 3), 0)
+    # 1. 轉換至 YCrCb 色彩空間 (膚色分離最強大)
+    ycrcb = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
     
-    # 2. Otsu 自動門檻二值化
-    _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # 2. 定義膚色範圍 (Cr 通道與 Cb 通道是關鍵)
+    # 這是經典的膚色偵測範圍，能有效過濾掉非人手的顏色
+    lower = np.array([0, 133, 77], dtype=np.uint8)
+    upper = np.array([255, 173, 127], dtype=np.uint8)
+    mask = cv2.inRange(ycrcb, lower, upper)
     
-    # 3. 輕微侵蝕 (Erosion)：讓手指變細，避免剪刀的兩指黏在一起
-    kernel = np.ones((2, 2), np.uint8)
-    thresh = cv2.erode(thresh, kernel, iterations=1)
+    # 3. 平滑化與降噪
+    mask = cv2.GaussianBlur(mask, (5, 5), 0)
     
     # 4. 縮放並計算 HOG
-    img_resized = cv2.resize(thresh, (64, 64))
+    img_resized = cv2.resize(mask, (64, 64))
     features = hog(img_resized, 
                    orientations=9, 
                    pixels_per_cell=(8, 8),
