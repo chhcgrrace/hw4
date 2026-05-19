@@ -54,7 +54,7 @@ def main():
         prediction_idx = np.argmax(probs)
         
         # 3. Threshold check for "Error"
-        if max_prob < 0.6:
+        if max_prob < 0.45:
             result_text = "Error"
             color = (0, 0, 255) # Red
         else:
