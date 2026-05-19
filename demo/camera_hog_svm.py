@@ -57,17 +57,29 @@ def main():
             result_text = "No Hand Detected"
             color = (0, 0, 255)
         else:
+            # --- 幾何形狀檢查 ---
+            is_geo_error = False
+            cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if cnts:
+                c = max(cnts, key=cv2.contourArea)
+                x, y, w_h, h_h = cv2.boundingRect(c)
+                aspect_ratio = float(w_h) / h_h if h_h > 0 else 0
+                hull = cv2.convexHull(c)
+                hull_area = cv2.contourArea(hull)
+                solidity = float(cv2.contourArea(c)) / hull_area if hull_area > 0 else 0
+                
+                # 嚴格認定：長寬比不對或形狀不紮實則為 Error
+                if aspect_ratio < 0.4 or aspect_ratio > 2.5 or solidity < 0.55:
+                    is_geo_error = True
+
             feat = feat_raw.reshape(1, -1)
             probs = model.predict_proba(feat)[0]
-            
-            # 取得前兩高機率
             sorted_probs = np.sort(probs)
             max_prob = sorted_probs[-1]
             margin = sorted_probs[-1] - sorted_probs[-2]
             prediction_idx = np.argmax(probs)
             
-            # 強化判定：信心度 > 0.55 且 領先差距 > 0.2
-            if max_prob < 0.55 or margin < 0.2:
+            if max_prob < 0.55 or margin < 0.2 or is_geo_error:
                 result_text = "Error"
                 color = (0, 0, 255)
             else:
