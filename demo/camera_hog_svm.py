@@ -9,6 +9,11 @@ def extract_hog_features(img):
     lower = np.array([0, 133, 77], dtype=np.uint8)
     upper = np.array([255, 173, 127], dtype=np.uint8)
     mask = cv2.inRange(ycrcb, lower, upper)
+    
+    # 侵蝕優化剪刀指縫
+    kernel = np.ones((3, 3), np.uint8)
+    mask = cv2.erode(mask, kernel, iterations=1)
+    
     mask = cv2.GaussianBlur(mask, (5, 5), 0)
     img_resized = cv2.resize(mask, (64, 64))
     features = hog(img_resized, orientations=9, pixels_per_cell=(8, 8),
@@ -75,7 +80,7 @@ def main():
                             b = np.sqrt((far[0] - start[0])**2 + (far[1] - start[1])**2)
                             c_s = np.sqrt((end[0] - far[0])**2 + (end[1] - far[1])**2)
                             angle = np.arccos((b**2 + c_s**2 - a**2) / (2*b*c_s)) * 57
-                            if d > 1200 and angle <= 90: # 距離門檻稍微靈敏一點
+                            if d > 800 and angle <= 90: # 降門檻
                                 finger_defects += 1
                                 cv2.circle(roi, far, 5, [0, 0, 255], -1)
 

@@ -10,6 +10,11 @@ def extract_hog_features(img):
     lower = np.array([0, 133, 77], dtype=np.uint8)
     upper = np.array([255, 173, 127], dtype=np.uint8)
     mask = cv2.inRange(ycrcb, lower, upper)
+    
+    # --- 剪刀優化：使用侵蝕讓手指分開 ---
+    kernel = np.ones((3, 3), np.uint8)
+    mask = cv2.erode(mask, kernel, iterations=1)
+    
     mask = cv2.GaussianBlur(mask, (5, 5), 0)
     img_resized = cv2.resize(mask, (64, 64))
     features = hog(img_resized, orientations=9, pixels_per_cell=(8, 8),
@@ -89,8 +94,8 @@ def main():
                             # 使用餘弦定理計算夾角 (指縫的角度通常很尖 < 90度)
                             angle = np.arccos((b**2 + c_side**2 - a**2) / (2*b*c_side)) * 57
                             
-                            # 距離夠深且角度夠尖，才算一個有效的指縫
-                            if d > 1000 and angle <= 90:
+                            # 降門檻：距離 > 800 (更靈敏抓指縫)
+                            if d > 800 and angle <= 90:
                                 finger_defects += 1
                                 cv2.circle(roi, far, 5, [0, 0, 255], -1) # 畫出偵測到的洞，DEBUG 用
             
