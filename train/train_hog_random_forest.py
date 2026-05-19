@@ -40,7 +40,7 @@ def load_data(folder_path):
         if not os.path.exists(category_path):
             continue
             
-        print(f"📂 正在處理 {category} 的 HOG 特徵...")
+        print(f"Processing HOG features for {category}...")
         for filename in os.listdir(category_path):
             if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
                 img = cv2.imread(os.path.join(category_path, filename))
@@ -57,19 +57,19 @@ def main():
     test_dir = os.path.join(base_dir, 'dataset', 'test')
     demo_dir = os.path.join(base_dir, 'demo')
 
-    print("=== [1] 提取 HOG 特徵中 ===")
+    print("=== [1] Extracting HOG features ===")
     X_train, y_train = load_data(train_dir)
     X_test, y_test = load_data(test_dir)
 
     if len(X_train) == 0:
-        print("❌ 錯誤：找不到訓練資料！")
+        print("Error: No training data found!")
         return
 
-    print("\n=== [2] 開始訓練隨機森林模型 ===")
+    print("\n=== [2] Training Random Forest model ===")
     rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
     rf_model.fit(X_train, y_train)
 
-    print("\n=== [3] 模型評估報告 (用於作業 Part 3) ===")
+    print("\n=== [3] Evaluation Report (Part 3) ===")
     y_pred = rf_model.predict(X_test)
     
     acc = accuracy_score(y_test, y_pred)
@@ -77,18 +77,18 @@ def main():
     rec = recall_score(y_test, y_pred, average='weighted')
     f1 = f1_score(y_test, y_pred, average='weighted')
 
-    print(f"🎯 Accuracy (準確率): {acc*100:.2f}%")
-    print(f"⚖️ Precision (精確率): {prec*100:.2f}%")
-    print(f"🔄 Recall (召回率): {rec*100:.2f}%")
-    print(f"🧪 F1-Score: {f1*100:.2f}%")
+    print(f"Accuracy: {acc*100:.2f}%")
+    print(f"Precision: {prec*100:.2f}%")
+    print(f"Recall: {rec*100:.2f}%")
+    print(f"F1-Score: {f1*100:.2f}%")
     
-    print("\n📊 詳細分類報告：")
+    print("\nDetailed Report:")
     print(classification_report(y_test, y_pred, target_names=['Rock', 'Paper', 'Scissors']))
 
     os.makedirs(demo_dir, exist_ok=True)
     model_path = os.path.join(demo_dir, 'rps_hog_rf_model.pkl')
     joblib.dump(rf_model, model_path)
-    print(f"\n✅ 模型已儲存至: {model_path}")
+    print(f"\nModel saved to: {model_path}")
 
 if __name__ == "__main__":
     main()
