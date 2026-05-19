@@ -93,3 +93,5 @@ ANTIGRAVITY: (解釋單核心序列化訓練原因，並修改程式碼重新導
 USER: 我覺得你把需要花費很多時間的地方刪掉好了
 ANTIGRAVITY: (移除了耗時的 GridSearchCV，直接以先前實驗得出的最佳參數訓練單一的 Linear SVM 管道模型，使訓練可在數秒內完成並維持 80.38% 的高準確率，並將 log 與程式碼更新同步推送至 GitHub。)
 
+USER: 好喔那就把目前的更新放上去吧，話說camera_hog_svm有動嗎?應該不動吧
+ANTIGRAVITY: (說明 camera_hog_svm.py 必須配合模型微調 HOG 特徵提取部分以對齊灰階輸入，但並未更動其核心的主動判斷與驗證邏輯。隨後將最新訓練之 model 權重、測試腳本及相機程式一併推送至 GitHub。)

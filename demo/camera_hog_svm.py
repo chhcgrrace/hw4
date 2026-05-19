@@ -4,16 +4,21 @@ import numpy as np
 from skimage.feature import hog
 
 def extract_hog_features(img):
-    if img is None: return None
+    if img is None: return None, None
+    # 1. Skin Mask for finger counting / area check
     ycrcb = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
     lower = np.array([0, 133, 77], dtype=np.uint8)
     upper = np.array([255, 173, 127], dtype=np.uint8)
     mask = cv2.inRange(ycrcb, lower, upper)
     mask = cv2.GaussianBlur(mask, (5, 5), 0)
-    img_resized = cv2.resize(mask, (64, 64))
+    
+    # 2. Grayscale HOG for model prediction
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img_resized = cv2.resize(gray, (64, 64), interpolation=cv2.INTER_AREA)
     features = hog(img_resized, orientations=9, pixels_per_cell=(8, 8),
                    cells_per_block=(2, 2), visualize=False)
     return features, mask
+
 
 def main():
     model_path = 'rps_hog_svm_model.pkl'

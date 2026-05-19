@@ -5,13 +5,19 @@ import joblib
 from skimage.feature import hog
 from sklearn.metrics import accuracy_score, classification_report
 
+def imread_safe(p):
+    try:
+        return cv2.imdecode(np.fromfile(p, dtype=np.uint8), cv2.IMREAD_COLOR)
+    except Exception:
+        return None
+
 def extract_hog_features(img):
+    if img is None: return None
     if len(img.shape) == 3:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img_resized = cv2.resize(img, (64, 64))
-    features = hog(img_resized, orientations=9, pixels_per_cell=(8, 8),
+    img_resized = cv2.resize(img, (64, 64), interpolation=cv2.INTER_AREA)
+    return hog(img_resized, orientations=9, pixels_per_cell=(8, 8),
                    cells_per_block=(2, 2), visualize=False)
-    return features
 
 def main():
     model_path = 'rps_hog_svm_model.pkl'
@@ -21,7 +27,7 @@ def main():
         print(f"Error: {model_path} not found. Run train_hog_svm.py first.")
         return
 
-    print("Loading HOG+SVM model...")
+    print("Loading HOG+SVM model pipeline...")
     model = joblib.load(model_path)
 
     label_map = {'rock': 0, 'paper': 1, 'scissors': 2}
@@ -34,7 +40,8 @@ def main():
         
         for filename in os.listdir(category_path):
             if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
-                img = cv2.imread(os.path.join(category_path, filename))
+                p = os.path.join(category_path, filename)
+                img = imread_safe(p)
                 if img is not None:
                     X_test.append(extract_hog_features(img))
                     y_test.append(label_idx)
