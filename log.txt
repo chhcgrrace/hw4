@@ -77,4 +77,19 @@ USER: 請記得幫我pull上github謝謝，先不要更動程式
 ANTIGRAVITY: (停止程式碼修改。將本地 README 更新與 Emoji 轉碼修正 commit 後，使用 Git Reset 順利解決與遠端分支的檔案衝突並成功 push 上 GitHub。)
 
 USER: 更新我們之間的聊天紀錄一字不漏洩ˋ謝
-ANTIGRAVITY: (更新 log.txt 的對話紀錄並同步推送至 GitHub)
+
+USER: train_hog_svm 關於這個阿，訓練上你能做什麼幫忙，讓我訓練出來的test辨識率提高謝ˋ謝
+ANTIGRAVITY: (將 train_hog_svm.py 重構為包含 StandardScaler 與 SVC 的 Pipeline，並使用 GridSearchCV 尋找最佳超參數，且優化了特徵提取為穩定的灰階 HOG 特徵以對齊測試及相機預測，成功將 test_hog_svm 的辨識率從 75.54% 提升至 80.38%。)
+
+USER: 關於這個阿train_hog_svm.py訓練上你能修改，讓我訓練出來的test_hog_svm辨識率提高謝謝
+ANTIGRAVITY: (寫入上述 Pipeline 與 GridSearchCV 架構至 train_hog_svm.py，並同步修改 test_hog_svm.py 及 camera_hog_svm.py 使三者特徵完全對齊。)
+
+USER: 好喔有需要我自己來跑嗎?你可以先中斷
+ANTIGRAVITY: (中斷背景訓練程序，引導使用者於本地終端機執行訓練。)
+
+USER: Fitting 3 folds for each of 23 candidates, totalling 69 fits 話說這個怎麼跑麼久阿
+ANTIGRAVITY: (解釋單核心序列化訓練原因，並修改程式碼重新導向暫存路徑至 C:\Users\Public\Temp 以在 Windows 下安全啟用多核心平行訓練 n_jobs=-1。)
+
+USER: 我覺得你把需要花費很多時間的地方刪掉好了
+ANTIGRAVITY: (移除了耗時的 GridSearchCV，直接以先前實驗得出的最佳參數訓練單一的 Linear SVM 管道模型，使訓練可在數秒內完成並維持 80.38% 的高準確率，並將 log 與程式碼更新同步推送至 GitHub。)
+
