@@ -66,13 +66,20 @@ def main():
             result_text = "No Hand Detected"
             color = (0, 0, 255)
         else:
-            # 2. 進行正式預測
+            # 2. 進行預測
             feat = feat_raw.reshape(1, -1)
             probs = model.predict_proba(feat)[0]
-            max_prob = np.max(probs)
+            
+            # 取得機率排名前二名，用於檢查「模糊度」
+            sorted_probs = np.sort(probs)
+            max_prob = sorted_probs[-1]
+            margin = sorted_probs[-1] - sorted_probs[-2] # 領先幅度
             prediction_idx = np.argmax(probs)
             
-            if max_prob < 0.45:
+            # --- 強化版 Error 門檻 ---
+            # 1. 最高信心度必須 > 0.55
+            # 2. 跟第二名的差距(Margin)必須 > 0.2，避免模稜兩可
+            if max_prob < 0.55 or margin < 0.2:
                 result_text = "Error"
                 color = (0, 0, 255)
             else:

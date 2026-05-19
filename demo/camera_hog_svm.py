@@ -59,10 +59,15 @@ def main():
         else:
             feat = feat_raw.reshape(1, -1)
             probs = model.predict_proba(feat)[0]
-            max_prob = np.max(probs)
+            
+            # 取得前兩高機率
+            sorted_probs = np.sort(probs)
+            max_prob = sorted_probs[-1]
+            margin = sorted_probs[-1] - sorted_probs[-2]
             prediction_idx = np.argmax(probs)
             
-            if max_prob < 0.45:
+            # 強化判定：信心度 > 0.55 且 領先差距 > 0.2
+            if max_prob < 0.55 or margin < 0.2:
                 result_text = "Error"
                 color = (0, 0, 255)
             else:
