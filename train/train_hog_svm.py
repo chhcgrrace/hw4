@@ -4,8 +4,6 @@ import numpy as np
 import joblib
 from skimage.feature import hog
 from sklearn.svm import SVC
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, classification_report
 
 def imread_safe(p):
@@ -60,13 +58,10 @@ def main():
     X_train, y_train = load_data(train_dir)
     X_test, y_test = load_data(test_dir)
 
-    print("\n=== Training SVM Pipeline ===")
+    print("\n=== Training SVM ===")
     
-    # Directly train with the optimal parameters found in experiments
-    model = Pipeline([
-        ('scaler', StandardScaler()),
-        ('svm', SVC(kernel='linear', C=1.0, probability=True, class_weight='balanced', random_state=42))
-    ])
+    # Directly train SVC on HOG features without scaling
+    model = SVC(kernel='linear', C=1.0, probability=True, class_weight='balanced', random_state=42)
 
     print("Fitting model...")
     model.fit(X_train, y_train)
@@ -77,10 +72,10 @@ def main():
     print(f"\nTest Accuracy: {accuracy_score(y_test, y_pred)*100:.2f}%")
     print(classification_report(y_test, y_pred, target_names=['Rock', 'Paper', 'Scissors']))
 
-    # Save model pipeline
+    # Save model
     os.makedirs(demo_dir, exist_ok=True)
     joblib.dump(model, os.path.join(demo_dir, 'rps_hog_svm_model.pkl'))
-    print("Model Pipeline saved successfully to demo/rps_hog_svm_model.pkl")
+    print("Model saved successfully to demo/rps_hog_svm_model.pkl")
 
 if __name__ == "__main__":
     main()
