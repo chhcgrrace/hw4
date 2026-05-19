@@ -28,8 +28,9 @@ def main():
         ret, frame = cap.read()
         if not ret: break
 
+        # ROI Setup
         h, w, _ = frame.shape
-        roi_size = 250
+        roi_size = 320
         x1 = (w - roi_size) // 2
         y1 = (h - roi_size) // 2
         x2 = x1 + roi_size
