@@ -14,7 +14,7 @@ def main():
     model_path = 'rps_hog_svm_model.pkl'
     try:
         model = joblib.load(model_path)
-        print("HOG+SVM Model loaded successfully!")
+        print("HOG+Linear-SVM Model loaded successfully!")
     except Exception as e:
         print(f"Error loading model: {e}")
         return
@@ -28,7 +28,6 @@ def main():
         ret, frame = cap.read()
         if not ret: break
 
-        # ROI Setup
         h, w, _ = frame.shape
         roi_size = 250
         x1 = (w - roi_size) // 2
@@ -37,14 +36,10 @@ def main():
         y2 = y1 + roi_size
 
         roi = frame[y1:y2, x1:x2]
-        
         cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 255, 0), 2)
-        cv2.putText(frame, "HOG+SVM: Place hand here", (x1, y1 - 10), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
 
         feat = extract_hog_features(roi).reshape(1, -1)
 
-        # Probabilities for Error detection
         probs = model.predict_proba(feat)[0]
         max_prob = np.max(probs)
         prediction_idx = np.argmax(probs)
@@ -58,8 +53,7 @@ def main():
 
         cv2.putText(frame, f"Result: {result_text}", (20, 40), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
-        
-        cv2.imshow("Rock Paper Scissors HOG+SVM (ROI)", frame)
+        cv2.imshow("Rock Paper Scissors HOG+SVM (Linear)", frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
