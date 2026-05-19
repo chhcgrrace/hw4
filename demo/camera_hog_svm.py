@@ -57,8 +57,8 @@ def main():
             result_text = "No Hand Detected"
             color = (0, 0, 255)
         else:
-            feat_scaled = scaler.transform(feat_raw.reshape(1, -1))
-            probs = model.predict_proba(feat_scaled)[0]
+            feat = feat_raw.reshape(1, -1)
+            probs = model.predict_proba(feat)[0]
             max_prob = np.max(probs)
             prediction_idx = np.argmax(probs)
             
