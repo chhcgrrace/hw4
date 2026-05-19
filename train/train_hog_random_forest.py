@@ -7,18 +7,21 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, f1_score, precision_score, recall_score
 
 def extract_hog_features(img):
-    """二值化專家版 HOG 特徵：徹底分離手部輪廓"""
+    """剪刀優化版 HOG 特徵：加入侵蝕分離手指"""
     if len(img.shape) == 3:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     
-    # 1. 影像預處理：高斯模糊降噪
-    blur = cv2.GaussianBlur(img, (5, 5), 0)
+    # 1. 影像預處理：輕微模糊保留縫隙
+    blur = cv2.GaussianBlur(img, (3, 3), 0)
     
-    # 2. Otsu 自動門檻二值化：將手變成純白，背景變成純黑
-    # 這能極大提升「布」這種具有複雜邊緣的手勢辨識率
+    # 2. Otsu 自動門檻二值化
     _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     
-    # 3. 縮放並計算 HOG
+    # 3. 輕微侵蝕 (Erosion)：讓手指變細，避免剪刀的兩指黏在一起
+    kernel = np.ones((2, 2), np.uint8)
+    thresh = cv2.erode(thresh, kernel, iterations=1)
+    
+    # 4. 縮放並計算 HOG
     img_resized = cv2.resize(thresh, (64, 64))
     features = hog(img_resized, 
                    orientations=9, 
