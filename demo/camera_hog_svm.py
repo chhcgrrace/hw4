@@ -57,19 +57,50 @@ def main():
             result_text = "No Hand Detected"
             color = (0, 0, 255)
         else:
+            # --- 指縫偵測與雙重驗證 ---
+            finger_defects = 0
+            cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if cnts:
+                c = max(cnts, key=cv2.contourArea)
+                hull = cv2.convexHull(c, returnPoints=False)
+                if len(hull) > 3:
+                    defects = cv2.convexityDefects(c, hull)
+                    if defects is not None:
+                        for i in range(defects.shape[0]):
+                            s, e, f, d = defects[i, 0]
+                            start = tuple(c[s][0])
+                            end = tuple(c[e][0])
+                            far = tuple(c[f][0])
+                            a = np.sqrt((end[0] - start[0])**2 + (end[1] - start[1])**2)
+                            b = np.sqrt((far[0] - start[0])**2 + (far[1] - start[1])**2)
+                            c_s = np.sqrt((end[0] - far[0])**2 + (end[1] - far[1])**2)
+                            angle = np.arccos((b**2 + c_s**2 - a**2) / (2*b*c_s)) * 57
+                            if d > 1200 and angle <= 90: # 距離門檻稍微靈敏一點
+                                finger_defects += 1
+                                cv2.circle(roi, far, 5, [0, 0, 255], -1)
+
             feat = feat_raw.reshape(1, -1)
             probs = model.predict_proba(feat)[0]
             sorted_probs = np.sort(probs)
             max_prob = sorted_probs[-1]
             margin = sorted_probs[-1] - sorted_probs[-2]
             prediction_idx = np.argmax(probs)
+            pred_label = labels[prediction_idx]
             
-            # --- 綜合判定 Error (移除幾何檢查) ---
-            if max_prob < 0.55 or margin < 0.2:
+            # --- 雙重驗證閘門 ---
+            is_valid_rps = False
+            if pred_label == 'Rock' and finger_defects == 0:
+                is_valid_rps = True
+            elif pred_label == 'Scissors' and finger_defects == 1:
+                is_valid_rps = True
+            elif pred_label == 'Paper' and finger_defects >= 3:
+                is_valid_rps = True
+
+            if max_prob < 0.55 or margin < 0.2 or not is_valid_rps:
                 result_text = "Error"
                 color = (0, 0, 255)
             else:
-                result_text = f"{labels[prediction_idx]} ({max_prob*100:.1f}%)"
+                result_text = f"{pred_label} ({max_prob*100:.1f}%)"
                 color = (0, 255, 0)
 
         cv2.putText(frame, f"Result: {result_text}", (20, 40), 
