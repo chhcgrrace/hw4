@@ -101,3 +101,12 @@ ANTIGRAVITY: (清理專案最外層的 10 張圖片檔案，並同步提交至 G
 
 USER: test.jpg 這個是測試準確率的圖請README上
 ANTIGRAVITY: (將 test.jpg 準確率結果圖放入專案根目錄，更新 README.md 將其嵌入模型評估小節中，並同步更新特徵提取之灰階描述，隨後同步推送至 GitHub。)
+
+USER: 話說我看 demo 裡面有四個 model 請問哪個是不需要的
+ANTIGRAVITY: (分析並說明 rps_hog_svm_scaler.pkl 完全沒有被程式載入，以及其餘非核心模型如 rps_svm_model.pkl、rps_hog_rf_model.pkl 的用途)
+
+USER: rps_hog_svm_scaler.pkl請刪掉謝謝
+ANTIGRAVITY: (在本地 demo 資料夾中刪除 rps_hog_svm_scaler.pkl 檔案，並確認 Git 狀態)
+
+USER: 沒錯推到hw4上謝謝
+ANTIGRAVITY: (將最新對話紀錄更新至 log.txt，並執行 Git Commit 與 Push 變更至 GitHub 遠端儲存庫)
